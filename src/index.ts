@@ -43,6 +43,7 @@ export {
   validateSHACL,
   validateSchemaQA,
   validateSHACLwithStore,
+  validateGraphs,
   parseTurtleToStore,
 } from './shacl-validator';
 export type {
