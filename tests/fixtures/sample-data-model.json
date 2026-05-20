@@ -1,0 +1,91 @@
+{
+  "baseURI": "http://example.org/g",
+  "quads": [
+    {
+      "subject": {
+        "termType": "NamedNode",
+        "value": "http://example.org/Alice",
+        "id": "http://example.org/Alice"
+      },
+      "predicate": {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+        "id": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+      },
+      "object": {
+        "termType": "NamedNode",
+        "value": "http://example.org/Person",
+        "language": null,
+        "datatype": null,
+        "id": "http://example.org/Person"
+      },
+      "graph": {
+        "termType": "NamedNode",
+        "value": "http://example.org/g",
+        "id": "http://example.org/g"
+      }
+    },
+    {
+      "subject": {
+        "termType": "BlankNode",
+        "value": "_:b0",
+        "id": "_:b0"
+      },
+      "predicate": {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2000/01/rdf-schema#label",
+        "id": "http://www.w3.org/2000/01/rdf-schema#label"
+      },
+      "object": {
+        "termType": "Literal",
+        "value": "hello",
+        "language": "en",
+        "datatype": {
+          "termType": "NamedNode",
+          "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
+          "id": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+        },
+        "id": ""
+      },
+      "graph": {
+        "termType": "NamedNode",
+        "value": "",
+        "id": ""
+      }
+    },
+    {
+      "subject": {
+        "termType": "NamedNode",
+        "value": "http://example.org/Alice",
+        "id": "http://example.org/Alice"
+      },
+      "predicate": {
+        "termType": "NamedNode",
+        "value": "http://example.org/age",
+        "id": "http://example.org/age"
+      },
+      "object": {
+        "termType": "Literal",
+        "value": "42",
+        "language": null,
+        "datatype": {
+          "termType": "NamedNode",
+          "value": "http://www.w3.org/2001/XMLSchema#integer",
+          "id": "http://www.w3.org/2001/XMLSchema#integer"
+        },
+        "id": ""
+      },
+      "graph": {
+        "termType": "NamedNode",
+        "value": "http://example.org/g",
+        "id": "http://example.org/g"
+      }
+    }
+  ],
+  "prefixes": [
+    { "prefix": "ex", "iri": "http://example.org/" },
+    { "prefix": "rdf", "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#" },
+    { "prefix": "rdfs", "iri": "http://www.w3.org/2000/01/rdf-schema#" },
+    { "prefix": "xsd", "iri": "http://www.w3.org/2001/XMLSchema#" }
+  ]
+}

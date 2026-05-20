@@ -84,3 +84,50 @@ npm run typecheck  # tsc --noEmit
 ## License
 
 MIT. See [LICENSE](./LICENSE).
+
+## Elm wire-format package
+
+This repo also publishes an Elm package
+(`ralphtq/elm-rdf-n3-quads`) that mirrors the JSON wire format the
+TypeScript side produces. If you're consuming this package from an
+Elm / elm-pages app, the Elm package gives you decoders for the JSON
+that arrives over ports — so your Elm code never has to re-derive the
+wire shape and drift cannot creep in undetected.
+
+```elm
+import Rdf.Wire.Types exposing (JSONdataModel)
+import Rdf.Wire.Decode
+
+port receiveJSONdataModelV2 : (Json.Decode.Value -> msg) -> Sub msg
+
+subscriptions =
+    receiveJSONdataModelV2 <|
+        \value ->
+            case Json.Decode.decodeValue Rdf.Wire.Decode.jsonDataModel value of
+                Ok payload -> GotDataModel payload
+                Err err    -> DecodeFailed (Json.Decode.errorToString err)
+```
+
+Install with `elm install ralphtq/elm-rdf-n3-quads` (or copy the
+modules directly from this repo until v0.1.0 publishes to the Elm
+package registry).
+
+A cross-language fixture (`tests/fixtures/sample-data-model.json`)
+serves as the source of truth for the wire shape — both the Elm
+test suite (`elm-test`) and the vitest TypeScript suite read it,
+so any drift in either ecosystem trips a test in CI.
+
+### Tag conventions
+
+- `0.1.0`, `0.1.1`, ... → Elm package releases (bare semver, per `elm publish`).
+- `v0.3.0`, `v0.3.1`, ... → npm package releases (with `v` prefix).
+
+The two tag streams coexist in this repo without colliding.
+
+### Elm development
+
+```sh
+npx elm-test                  # run the Elm test suite (tests/*.elm)
+npx elm-format --validate src tests
+```
+
