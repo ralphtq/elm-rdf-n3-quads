@@ -1,4 +1,4 @@
-# @ralphtq/rdf-n3-quads
+# @ralphtq/elm-rdf-n3-quads
 
 Port-agnostic TypeScript library for RDF quad-store, SPARQL, and SHACL
 validation operations. Wraps [N3.js](https://github.com/rdfjs/N3.js),
@@ -11,7 +11,7 @@ validation operations. Wraps [N3.js](https://github.com/rdfjs/N3.js),
 Originally extracted from
 [elm-qudt](https://github.com/ralphtq/elm-qudt), where it backed the
 in-browser RDF quad store via Elm ports. This package is the
-port-agnostic core; the companion `@ralphtq/rdf-quadstore-elm-ports`
+port-agnostic core; the companion `@ralphtq/rdf-n3-quads-elm-ports`
 shim adapts it for elm-pages / Elm apps.
 
 ## Status
@@ -21,7 +21,7 @@ Pre-release. `0.1.0` is the first publish; APIs may change before `1.0.0`.
 ## Install
 
 ```sh
-npm install @ralphtq/rdf-n3-quads
+npm install @ralphtq/elm-rdf-n3-quads
 ```
 
 You also need the runtime peers:
@@ -33,7 +33,7 @@ npm install n3 @comunica/query-sparql rdf-validate-shacl sparqljs jsonld jszip
 ## Usage
 
 ```ts
-import { QuadStoreSession } from '@ralphtq/rdf-n3-quads';
+import { QuadStoreSession } from '@ralphtq/elm-rdf-n3-quads';
 
 const session = new QuadStoreSession();
 
