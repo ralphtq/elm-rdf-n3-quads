@@ -33,6 +33,7 @@ import {
   validateSchemaQA,
   validateSHACLwithStore,
   ValidationReport,
+  JenaEngine,
 } from './shacl-validator';
 
 /**
@@ -43,6 +44,12 @@ export type QuadStoreSessionOptions = {
   engine?: QueryEngine;
   /** Inject an existing ParseState. Defaults to a fresh empty store. */
   state?: ParseState;
+  /**
+   * Optional Apache Jena SHACL engine. When provided, every validate*
+   * call tries Jena first and falls back to the JS pipeline on failure.
+   * Leave unset to use the JS engine only.
+   */
+  jenaEngine?: JenaEngine;
 };
 
 /**
@@ -65,10 +72,12 @@ export type QuadStoreSessionOptions = {
 export class QuadStoreSession {
   readonly engine: QueryEngine;
   readonly state: ParseState;
+  readonly jenaEngine?: JenaEngine;
 
   constructor(options: QuadStoreSessionOptions = {}) {
     this.engine = options.engine ?? new QueryEngine();
     this.state = options.state ?? makeEmptyParseState();
+    this.jenaEngine = options.jenaEngine;
   }
 
   /**
@@ -168,7 +177,7 @@ export class QuadStoreSession {
   validateSHACL(
     request: Parameters<typeof validateSHACL>[0]
   ): Promise<ValidationReport> {
-    return validateSHACL(request, this.engine);
+    return validateSHACL(request, this.engine, this.jenaEngine);
   }
 
   /**
@@ -178,7 +187,13 @@ export class QuadStoreSession {
   validateSchemaQA(
     request: { queryTimeoutMs: number; focusGraphId: string | null; importedGraphIds: string[] }
   ): Promise<ValidationReport> {
-    return validateSchemaQA(request, this.state.quadStore, this.state.prefixObjects, this.engine);
+    return validateSchemaQA(
+      request,
+      this.state.quadStore,
+      this.state.prefixObjects,
+      this.engine,
+      this.jenaEngine
+    );
   }
 
   /**
@@ -198,7 +213,8 @@ export class QuadStoreSession {
       request,
       this.state.quadStore,
       this.state.prefixObjects,
-      this.engine
+      this.engine,
+      this.jenaEngine
     );
   }
 }

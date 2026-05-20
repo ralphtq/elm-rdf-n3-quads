@@ -6,10 +6,25 @@ import { buildExtensionFunctions } from './shacl-functions';
 import { jsonTypeAndValueToN3Term, jsonObjectToTerm } from './rdf-utils';
 const { Store, Parser } = N3;
 
-// Note: the Jena SHACL engine and bridge moved to the separate
-// `@ralphtq/elm-rdf-jena` package. This module uses the JS engine
-// (rdf-validate-shacl) exclusively. A future revision can accept an
-// optional `JenaEngine` constructor parameter on the validators below.
+/**
+ * Adapter for an external SHACL engine (e.g. Apache Jena via an HTTP
+ * bridge in elm-qudt's vite dev server, or a future
+ * @ralphtq/elm-rdf-jena package). Inject one via
+ * `QuadStoreSession({ jenaEngine })` or by passing as the last arg to
+ * the standalone validators; the validators below try Jena first then
+ * fall back to the JS engine on absence or failure.
+ *
+ * `isAvailable()` is called once per validation; cache inside your
+ * implementation if the check is expensive.
+ */
+export interface JenaEngine {
+  isAvailable(): Promise<boolean>;
+  validateGraphs(
+    dataStore: N3.Store,
+    shapesStore: N3.Store,
+    options: { focusNodeIRI?: string; shapeIRI?: string; timeoutMs?: number }
+  ): Promise<ValidationReport>;
+}
 
 interface PrefixEntry {
   prefix: string;
@@ -590,12 +605,37 @@ export async function validateGraphs(
   engine: QueryEngine,
   focusNodeIRI?: string,
   shapeIRI?: string,
-  queryTimeoutMs?: number
+  queryTimeoutMs?: number,
+  jenaEngine?: JenaEngine
 ): Promise<ValidationReport> {
   const overallStartTime = Date.now();
 
-  // JavaScript pipeline (Comunica + rdf-validate-shacl) — the only engine
-  // shipped with this package. Jena moved to @ralphtq/elm-rdf-jena.
+  // If a Jena engine is injected and available, run validation through it.
+  // On failure, log and fall through to the JS pipeline; the eventual
+  // engineInfo records jenaFallback=true and jenaError=<reason>.
+  let jenaFallbackReason = '';
+  if (jenaEngine && (await jenaEngine.isAvailable())) {
+    try {
+      const report = await jenaEngine.validateGraphs(dataStore, shapesStore, {
+        focusNodeIRI,
+        shapeIRI,
+        timeoutMs: queryTimeoutMs || 300_000,
+      });
+      report.engineInfo = {
+        engine: 'jena',
+        jenaFallback: false,
+        jenaError: '',
+        elapsedMs: Date.now() - overallStartTime,
+      };
+      return report;
+    } catch (err: any) {
+      jenaFallbackReason = err?.message || String(err);
+      console.error('[shacl-validator] Jena validation failed, falling back to JS engine:', jenaFallbackReason);
+    }
+  }
+
+  // JavaScript pipeline (Comunica + rdf-validate-shacl) — runs if no
+  // Jena engine was injected, if it reported unavailable, or if it threw.
 
   // If scoping to a single focus node, modify the shapes store
   const effectiveShapesStore = focusNodeIRI
@@ -726,8 +766,8 @@ export async function validateGraphs(
     dataSubjects: dataSubjectSet.size,
     engineInfo: {
       engine: 'javascript',
-      jenaFallback: false,
-      jenaError: '',
+      jenaFallback: jenaFallbackReason !== '',
+      jenaError: jenaFallbackReason,
       elapsedMs: Date.now() - overallStartTime,
     },
   };
@@ -735,7 +775,8 @@ export async function validateGraphs(
 
 export async function validateSHACL(
   request: ValidateRequest,
-  engine: QueryEngine
+  engine: QueryEngine,
+  jenaEngine?: JenaEngine
 ): Promise<ValidationReport> {
   const [dataStore, shapesStore] = await Promise.all([
     fetchAndParse(request.dataGraphSource),
@@ -753,7 +794,7 @@ export async function validateSHACL(
     expandedFocusNode = expandCurie(request.focusNode, prefixMap);
   }
 
-  return validateGraphs(dataStore, shapesStore, engine, expandedFocusNode);
+  return validateGraphs(dataStore, shapesStore, engine, expandedFocusNode, undefined, undefined, jenaEngine);
 }
 
 /**
@@ -780,7 +821,8 @@ export async function validateSchemaQA(
   request: { queryTimeoutMs: number; focusGraphId: string | null; importedGraphIds: string[] },
   dataStore: N3.Store,
   prefixObjects: Array<{ prefix: string; iri: string }>,
-  engine: QueryEngine
+  engine: QueryEngine,
+  jenaEngine?: JenaEngine
 ): Promise<ValidationReport> {
   const SH = 'http://www.w3.org/ns/shacl#';
     const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
@@ -910,7 +952,8 @@ export async function validateSchemaQA(
       engine,
       undefined,       // no focus node — validate all
       undefined,       // no single shape — validate all shapes
-      request.queryTimeoutMs
+      request.queryTimeoutMs,
+      jenaEngine
     );
 
     return validationReport;
@@ -920,7 +963,8 @@ export async function validateSHACLwithStore(
   request: { focusNode: string | null; shapesGraphKind: string; shapesGraphContent: string; shapeIRI: string | null; loadOnly: boolean; queryTimeoutMs: number },
   dataStore: N3.Store,
   prefixObjects: Array<{ prefix: string; iri: string }>,
-  engine: QueryEngine
+  engine: QueryEngine,
+  jenaEngine?: JenaEngine
 ): Promise<ValidationReport> {
   const shapesStore = await fetchAndParse({
       kind: request.shapesGraphKind,
@@ -997,7 +1041,8 @@ export async function validateSHACLwithStore(
       engine,
       expandedFocusNode,
       expandedShapeIRI,
-      request.queryTimeoutMs
+      request.queryTimeoutMs,
+      jenaEngine
     );
 
     return validationReport;

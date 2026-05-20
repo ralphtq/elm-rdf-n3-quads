@@ -50,6 +50,7 @@ export type {
   ShapeDefinition,
   EngineInfo,
   ValidationReport,
+  JenaEngine,
 } from './shacl-validator';
 
 export type {

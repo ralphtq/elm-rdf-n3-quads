@@ -1,6 +1,6 @@
 {
   "name": "@ralphtq/rdf-n3-quads",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Port-agnostic TypeScript wrapper around N3.js + Comunica + rdf-validate-shacl for RDF quad-store, SPARQL, and SHACL validation. Companion to the ralphtq/elm-rdf Elm package.",
   "type": "module",
   "main": "./dist/index.js",
