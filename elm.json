@@ -1,9 +1,9 @@
 {
     "type": "package",
     "name": "ralphtq/elm-rdf-n3-quads",
-    "summary": "JSON wire-format types + decoders/encoders for the @ralphtq/elm-rdf-n3-quads TS companion",
+    "summary": "Wire-format types + JSON decoders for @ralphtq/elm-rdf-n3-quads TS",
     "license": "MIT",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "exposed-modules": [
         "Rdf.Wire.Types",
         "Rdf.Wire.Decode",
